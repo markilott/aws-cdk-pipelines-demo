@@ -1,0 +1,257 @@
+#############################################################
+# This template is used to prepare the DEV Account so that
+# the Pipeline can be run from Shared Services.
+#
+# Run the pipeline-account-prep template BEFORE this one
+#
+# This stack needs to be deployed at least twice:
+# - Run before the Pipeline Stack to create a dummy Role in the CodeCommit Account
+# - Run the Pipeline Stack, then update the Bucket and Key Arns into Parameters
+# - Run this again to create a Policy to attach to the dummy Role
+# - Repeat if you create addtional pipeline stacks
+#############################################################
+
+Description: Pipeline CodeCommit Account Prep Stack
+Resources:
+  # Role to be assumed by CodePipeline from Shared Services
+  ccRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${pipelineAccount}:root'
+        Version: '2012-10-17'
+      RoleName: !Ref codeCommitAccessRoleName
+
+  # Base Policy for the role - access to CodeCommit repo
+  codeCommitPipelinePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - codecommit:UploadArchive
+              - codecommit:GetCommit
+              - codecommit:GetUploadArchiveStatus
+              - codecommit:ListBranches
+              - codecommit:GetComment
+              - codecommit:GetCommitHistory
+              - codecommit:GetBranch
+            Effect: Allow
+            Resource: !Sub 'arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${repoName}'
+          - Action: codecommit:ListRepositories
+            Effect: Allow
+            Resource: '*'
+        Version: '2012-10-17'
+      PolicyName: CodeCommitPipelinePolicy
+      Roles:
+        - Ref: ccRole
+  
+  # DEV pipeline resource policy - to be attached after we have created the Pipeline
+  codeCommitPipelinePolicyDev:
+    Type: AWS::IAM::Policy
+    Condition: createPolicyDev
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Effect: Allow
+            Resource:
+              - !Ref bucketArnDev
+              - !Sub '${bucketArnDev}/*'
+          - Action:
+              - kms:DescribeKey
+              - kms:GenerateDataKey*
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:Decrypt
+            Effect: Allow
+            Resource: !Ref keyArnDev
+        Version: '2012-10-17'
+      PolicyName: PipelineDev
+      Roles:
+        - Ref: ccRole
+  
+  # UAT pipeline resource policy - to be attached after we have created the Pipeline
+  codeCommitPipelinePolicyUat:
+    Type: AWS::IAM::Policy
+    Condition: createPolicyUat
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Effect: Allow
+            Resource:
+              - !Ref bucketArnUat
+              - !Sub '${bucketArnUat}/*'
+          - Action:
+              - kms:DescribeKey
+              - kms:GenerateDataKey*
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:Decrypt
+            Effect: Allow
+            Resource: !Ref keyArnUat
+        Version: '2012-10-17'
+      PolicyName: PipelineUat
+      Roles:
+        - Ref: ccRole
+
+  # Prod pipeline resource policy - to be attached after we have created the Pipeline
+  codeCommitPipelinePolicyProd:
+    Type: AWS::IAM::Policy
+    Condition: createPolicyProd
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:GetObject*
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Effect: Allow
+            Resource:
+              - !Ref bucketArnProd
+              - !Sub '${bucketArnProd}/*'
+          - Action:
+              - kms:DescribeKey
+              - kms:GenerateDataKey*
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:Decrypt
+            Effect: Allow
+            Resource: !Ref keyArnProd
+        Version: '2012-10-17'
+      PolicyName: PipelineProd
+      Roles:
+        - Ref: ccRole
+
+  # Events rule to send CodeCommit events for our repo to Shared Services account
+  updateToPipelineRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Send CodeCommit events to Pipeline Account
+      EventBusName: default
+      EventPattern:
+        detail-type:
+          - CodeCommit Repository State Change
+        source:
+          - aws.codecommit
+        resources:
+          - !Sub 'arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${repoName}'
+      State: ENABLED
+      Targets:
+        - Arn: !Sub 'arn:aws:events:${AWS::Region}:${pipelineAccount}:event-bus/default'
+          Id: SharedPipeline
+
+# Metadata and Outputs
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Account Parameters
+        Parameters:
+          - pipelineAccount
+      - Label:
+          default: CodeCommit Parameters
+        Parameters:
+          - codeCommitAccessRoleName
+          - repoName
+      - Label:
+          default: Pipeline Parameters
+        Parameters:
+          - bucketArnDev
+          - keyArnDev
+          - bucketArnUat
+          - keyArnUat
+          - bucketArnProd
+          - keyArnProd
+
+    ParameterLabels:
+      pipelineAccount:
+        default: Pipeline Account
+      codeCommitAccessRoleName:
+        default: CodeCommit acces Role name
+      repoName:
+        default: Demo Repo Name
+      bucketArnDev:
+        default: DEV Pipeline Artifact Bucket Arn
+      keyArnDev:
+        default: DEV Pipeline KMS Key Arn
+      bucketArnUat:
+        default: UAT Pipeline Artifact Bucket Arn
+      keyArnUat:
+        default: UAT Pipeline KMS Key Arn
+      bucketArnProd:
+        default: Prod Pipeline Artifact Bucket Arn
+      keyArnProd:
+        default: Prod Pipeline KMS Key Arn
+
+Parameters:
+  pipelineAccount:
+    Type: String
+    Description: Account Number
+    Default: '444444444444'
+  codeCommitAccessRoleName:
+    Type: String
+    Description: Role name
+    Default: PipelineCodeCommitAccessRole
+  repoName:
+    Type: String
+    Description: Repository name
+    Default: my-repo
+  bucketArnDev:
+    Type: String
+    Description: Enter after Pipeline deployment
+  keyArnDev:
+    Type: String
+    Description: Enter after Pipeline deployment
+  bucketArnUat:
+    Type: String
+    Description: Enter after Pipeline deployment
+  keyArnUat:
+    Type: String
+    Description: Enter after Pipeline deployment
+  bucketArnProd:
+    Type: String
+    Description: Enter after Pipeline deployment
+  keyArnProd:
+    Type: String
+    Description: Enter after Pipeline deployment
+
+Conditions:
+  # Create and attach the policy after we have the Pipeline key and bucket Arns
+  createPolicyDev:
+    Fn::And:
+      - Fn::Not:
+        - Fn::Equals: [!Ref bucketArnDev, '']
+      - Fn::Not:
+        - Fn::Equals: [!Ref keyArnDev, '']
+  createPolicyUat:
+    Fn::And:
+      - Fn::Not:
+        - Fn::Equals: [!Ref bucketArnUat, '']
+      - Fn::Not:
+        - Fn::Equals: [!Ref keyArnUat, '']
+  createPolicyProd:
+    Fn::And:
+      - Fn::Not:
+        - Fn::Equals: [!Ref bucketArnProd, '']
+      - Fn::Not:
+        - Fn::Equals: [!Ref keyArnProd, '']
+
+Outputs:
+  roleArn:
+    Description: CodeCommit Pipeline Role Arn
+    Value:
+      Fn::GetAtt:
+        - ccRole
+        - Arn

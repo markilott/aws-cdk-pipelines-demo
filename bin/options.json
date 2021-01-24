@@ -1,0 +1,18 @@
+{
+    "region": "ap-southeast-1",
+    "devAccount": "111111111111",
+    "uatAccount": "222222222222",
+    "prodAccount": "333333333333",
+    "toolsAccount": "444444444444",
+    "codeCommitAccessRoleName": "DemoPipelineCodeCommitAccessRole",
+    "repoName": "pipeline-demo",
+    "version": "1",
+    "pipelineResources": {
+        "bucketArnDev": "",
+        "keyArnDev": "",
+        "bucketArnUat": "",
+        "keyArnUat": "",
+        "bucketArnProd": "",
+        "keyArnProd": ""
+    }
+}

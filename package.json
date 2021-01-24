@@ -1,0 +1,30 @@
+{
+  "name": "cdk-pipeline-demo",
+  "version": "1.0.0",
+  "description": "CDK Cross-Account Pipeline Demo",
+  "main": "bin/pipeline-deploy.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "cdk": "cdk",
+    "build": "bash bin/build.sh"
+  },
+  "author": "Mark Ilott",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-cdk/aws-apigateway": "^1.86.0",
+    "@aws-cdk/aws-codecommit": "^1.86.0",
+    "@aws-cdk/aws-codepipeline": "^1.86.0",
+    "@aws-cdk/aws-codepipeline-actions": "^1.86.0",
+    "@aws-cdk/aws-ec2": "^1.86.0",
+    "@aws-cdk/aws-events": "^1.86.0",
+    "@aws-cdk/aws-iam": "^1.86.0",
+    "@aws-cdk/aws-lambda": "^1.86.0",
+    "@aws-cdk/core": "^1.86.0",
+    "@aws-cdk/pipelines": "^1.86.0",
+    "@aws-cdk/aws-route53": "^1.86.0",
+    "@aws-cdk/aws-sns": "^1.86.0",
+    "@aws-cdk/aws-sns-subscriptions": "^1.86.0"
+  }
+}

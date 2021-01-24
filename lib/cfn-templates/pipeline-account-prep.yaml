@@ -1,0 +1,27 @@
+#############################################################
+# This template is used to prepare the Shared Services Account so that
+# the Pipeline can be triggered by CodeCommit in DEV.
+#
+# Run this template First
+#
+#############################################################
+
+Description: Allow CodeCommit Events forwarding from DEV
+Resources:
+  eventsPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      StatementId: PipelineCodeCommit
+      EventBusName: default
+      Statement:
+        Effect: Allow
+        Principal:
+          AWS: !Sub 'arn:aws:iam::${codeCommitAccount}:root'
+        Action: events:PutEvents
+        Resource: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default'
+
+Parameters:
+  codeCommitAccount:
+    Type: String
+    Description: CodeCommit Account Number
+    Default: '111111111111'

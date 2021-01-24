@@ -1,0 +1,14 @@
+{
+  "name": "pipeline-demo-lambda",
+  "version": "1.0.0",
+  "description": "Function for the API demo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mark Ilott",
+  "license": "ISC",
+  "dependencies": {
+    "moment": "^2.29.1"
+  }
+}
