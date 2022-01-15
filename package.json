@@ -11,7 +11,7 @@
     "build": "bash bin/build.sh"
   },
   "author": "Mark Ilott",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@aws-cdk/aws-apigateway": "^1.86.0",
     "@aws-cdk/aws-codecommit": "^1.86.0",

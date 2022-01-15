@@ -1,5 +1,13 @@
 # AWS CDK Cross-Account Pipeline Demo
 
+&nbsp;
+
+************
+**Note:** *this project uses CDK v1 pipelines (pre GA pipeline release). It still works, but is not the way new pipelines should be created.*
+************
+
+&nbsp;
+
 This Javascript CDK project creates a Pipeline in a Tools Account, to deploy an application from code in CodeCommit in a Dev account,
 into Dev, Pre-Prod and Prod environments in their own accounts.
 
