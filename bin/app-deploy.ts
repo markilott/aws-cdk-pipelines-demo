@@ -4,15 +4,16 @@
  * Will deploy into the current default CLI account.
  *
  * Deployment:
- * cdk deploy --all -a "node bin/app-deploy.js" --outputs-file api-outputs.json
+ * cdk deploy --all -a "npx ts-node bin/app-deploy.ts"
  */
 
 /* eslint-disable no-new */
-const cdk = require('@aws-cdk/core');
-const { ApplicationStack } = require('../lib/application/application-stage');
-const options = require('./options.json');
+import 'source-map-support/register';
+import { App } from 'aws-cdk-lib';
+import { ApplicationStack } from '../lib/application/application-stage';
+import { options } from '../config';
 
-const app = new cdk.App();
+const app = new App();
 
 // use account details from default AWS credentials:
 const account = process.env.CDK_DEFAULT_ACCOUNT;

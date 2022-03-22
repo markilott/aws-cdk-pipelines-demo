@@ -1,27 +1,37 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-new */
+import {
+    CfnOutput, Stack, StackProps,
+    Stage, StageProps,
+} from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import {
+    RestApi, EndpointType, LambdaIntegration,
+    JsonSchemaType, JsonSchemaVersion,
+} from 'aws-cdk-lib/aws-apigateway';
+import { Function, Code, Runtime } from 'aws-cdk-lib/aws-lambda';
 
-const { Stage, Stack, CfnOutput } = require('@aws-cdk/core');
-const apigw = require('@aws-cdk/aws-apigateway');
-const lambda = require('@aws-cdk/aws-lambda');
+interface ApplicationStackProps extends StackProps {
+    version: string,
+}
 
-class ApplicationStack extends Stack {
+export class ApplicationStack extends Stack {
     /**
      * Deploys a simple API with Lambda function and GET method.
      * API Url is output for use in testing.
      *
-     * @param {cdk.Construct} scope
+     * @param {Construct} scope
      * @param {string} id
-     * @param {cdk.StackProps=} props
+     * @param {StackProps=} props
      */
-    constructor(scope, id, props) {
+    constructor(scope: Construct, id: string, props: ApplicationStackProps) {
         super(scope, id, props);
 
         // Lambda function
-        const lambdaFnc = new lambda.Function(this, 'lambdaFnc', {
+        const lambdaFnc = new Function(this, 'lambdaFnc', {
             functionName: 'pipelineTestFnc',
-            code: lambda.Code.fromAsset(`${__dirname}/lambda-src`),
-            runtime: lambda.Runtime.NODEJS_12_X,
+            code: Code.fromAsset(`${__dirname}/lambda-src`),
+            runtime: Runtime.NODEJS_14_X,
             handler: 'index.handler',
             environment: {
                 VERSION: (props.version) || 'Unknown',
@@ -30,14 +40,14 @@ class ApplicationStack extends Stack {
         });
 
         // API base
-        const api = new apigw.RestApi(this, 'pipelineTestApi', {
+        const api = new RestApi(this, 'pipelineTestApi', {
             restApiName: 'pipelineTestApi',
             description: 'The pipelineTestApi',
             deployOptions: {
                 stageName: 'v1',
                 description: 'V1 Deployment',
             },
-            endpointTypes: [apigw.EndpointType.REGIONAL],
+            endpointTypes: [EndpointType.REGIONAL],
         });
         new CfnOutput(this, 'apiUrl', {
             description: 'API URL',
@@ -45,7 +55,7 @@ class ApplicationStack extends Stack {
         });
 
         // Lambda integration for API method
-        const lambdaInteg = new apigw.LambdaIntegration(lambdaFnc, {
+        const lambdaInteg = new LambdaIntegration(lambdaFnc, {
             proxy: false,
             requestTemplates: {
                 'application/json': `{
@@ -62,28 +72,46 @@ class ApplicationStack extends Stack {
             }],
         });
 
+        // Response model for Method Responses
+        const jsonResponseModel = api.addModel('JsonResponse', {
+            contentType: 'application/json',
+            schema: {
+                schema: JsonSchemaVersion.DRAFT7,
+                title: 'JsonResponse',
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                    state: { type: JsonSchemaType.STRING },
+                    greeting: { type: JsonSchemaType.STRING },
+                },
+            },
+        });
+
         // API method at root
         api.root.addMethod('GET', lambdaInteg, {
             methodResponses: [{
                 statusCode: '200',
                 responseModels: {
-                    'application/json': '$input.body',
+                    'application/json': jsonResponseModel,
                 },
             }],
         });
     }
 }
 
-class ApplicationStage extends Stage {
+interface ApplicationStageProps extends StageProps {
+    version: string,
+}
+
+export class ApplicationStage extends Stage {
     /**
      * Deploys the API stack via CodePipeline.
      * Stages can deploy many stacks, but keeping it simple here with one.
      *
-     * @param {cdk.Construct} scope
+     * @param {Construct} scope
      * @param {string} id
-     * @param {cdk.StageProps=} props
+     * @param {StageProps=} props
      */
-    constructor(scope, id, props) {
+    constructor(scope: Construct, id: string, props: ApplicationStageProps) {
         super(scope, id, props);
 
         const { env, version } = props;
@@ -96,5 +124,3 @@ class ApplicationStage extends Stage {
         });
     }
 }
-
-module.exports = { ApplicationStack, ApplicationStage };
