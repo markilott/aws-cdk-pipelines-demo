@@ -1,30 +1,32 @@
 {
   "name": "cdk-pipeline-demo",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "CDK Cross-Account Pipeline Demo",
-  "main": "bin/pipeline-deploy.js",
-  "directories": {
-    "lib": "lib"
+  "license": "MIT",
+  "bin": {
+      "sso-mgt": "bin/deploy.js"
   },
   "scripts": {
-    "cdk": "cdk",
-    "build": "bash bin/build.sh"
+      "cdk": "cdk",
+      "deploy": "cdk deploy --require-approval=never",
+      "build": "bash bin/build.sh"
   },
-  "author": "Mark Ilott",
-  "license": "MIT",
+  "devDependencies": {
+      "@types/node": "^14.14.31",
+      "@typescript-eslint/eslint-plugin": "^5.10.2",
+      "@typescript-eslint/parser": "^5.10.2",
+      "aws-cdk": "^2.13.0",
+      "aws-sdk": "^2.1077.0",
+      "eslint": "^8.8.0",
+      "eslint-config-airbnb-base": "^15.0.0",
+      "eslint-config-airbnb-typescript": "^16.1.0",
+      "eslint-plugin-import": "^2.25.4",
+      "ts-node": "^10.5.0",
+      "typescript": "^4.5.5"
+  },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "^1.86.0",
-    "@aws-cdk/aws-codecommit": "^1.86.0",
-    "@aws-cdk/aws-codepipeline": "^1.86.0",
-    "@aws-cdk/aws-codepipeline-actions": "^1.86.0",
-    "@aws-cdk/aws-ec2": "^1.86.0",
-    "@aws-cdk/aws-events": "^1.86.0",
-    "@aws-cdk/aws-iam": "^1.86.0",
-    "@aws-cdk/aws-lambda": "^1.86.0",
-    "@aws-cdk/core": "^1.86.0",
-    "@aws-cdk/pipelines": "^1.86.0",
-    "@aws-cdk/aws-route53": "^1.86.0",
-    "@aws-cdk/aws-sns": "^1.86.0",
-    "@aws-cdk/aws-sns-subscriptions": "^1.86.0"
+      "aws-cdk-lib": "^2.13.0",
+      "constructs": "^10.0.51",
+      "source-map-support": "^0.5.21"
   }
 }
